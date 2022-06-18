@@ -1,2 +1,3 @@
 rootProject.name = "JetPackKobe"
 include ':app'
+include ':jplib'

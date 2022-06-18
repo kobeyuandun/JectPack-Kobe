@@ -24,6 +24,19 @@ android {
 }
 
 dependencies {
-//    implementation project(':appLib')
+    implementation project(':jplib')
     kapt "androidx.room:room-compiler:2.2.3"
 }
+//groovy
+configurations.all {
+    resolutionStrategy.force "org.antlr:antlr4-runtime:4.5.3"
+    resolutionStrategy.force "org.antlr:antlr4-tool:4.5.3"
+}
+
+//kotlin DSL
+//configurations.all {
+//    resolutionStrategy {
+//        force("org.antlr:antlr4-runtime:4.7.1")
+//        force("org.antlr:antlr4-tool:4.7.1")
+//    }
+//}
