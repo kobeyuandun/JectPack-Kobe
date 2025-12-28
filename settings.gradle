@@ -1,3 +1,10 @@
 rootProject.name = "JetPackKobe"
 include ':app'
 include ':jplib'
+
+//setBinding(new Binding([gradle :this]))
+//evaluate(new File(
+//        settingsDir.parentFile,
+//        'ject_flutter_module/.android/include_flutter.groovy'))
+//include(':ject_flutter_module')
+//project(':ject_flutter_module').projectDir= new File('../ject_flutter_module')

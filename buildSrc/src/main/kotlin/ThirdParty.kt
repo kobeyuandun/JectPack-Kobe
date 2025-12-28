@@ -14,11 +14,11 @@ object ThirdParty {
     const val eventBus = "org.greenrobot:eventbus:3.2.0"
 
     const val aviUi = "com.wang.avi:library:2.1.3"
-    const val banner = "cn.bingoogolapple:bga-banner:2.2.7"
+    const val banner = "cn.bingoogolapple:bga-banner:2.2.7@aar"
     const val magic = "com.github.hackware1993:MagicIndicator:1.6.0"
     const val easypermissions = "pub.devrel:easypermissions:3.0.0"
     const val labelsView = "com.github.donkingliang:LabelsView:1.6.1"
-    const val rxPermission = "com.github.tbruyelle:rxpermissions:0.12"
+    const val rxPermission = "com.github.tbruyelle:rxpermissions:0.10.2"
     const val shadow = "com.github.lihangleo2:ShadowLayout:3.1.3"
 
     val retrofit = Retrofit
@@ -32,12 +32,12 @@ object ThirdParty {
     val glide = Glide
     object Glide {
         const val glide = "com.github.bumptech.glide:glide:4.11.0"
-        const val transformations = "jp.wasabeef:glide-transformations:4.1.0"
+        const val transformations = "jp.wasabeef:glide-transformations:4.3.0"
     }
 
     val smart = Smart
     object Smart {
-        private const val smart_version = "1.1.2"
+        private const val smart_version = "1.1.0"
         const val smart = "com.scwang.smartrefresh:SmartRefreshLayout:$smart_version"
         const val head = "com.scwang.smartrefresh:SmartRefreshHeader:$smart_version"
     }

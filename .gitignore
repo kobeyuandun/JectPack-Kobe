@@ -1,15 +1,35 @@
+# Android Studio/IntelliJ
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
 local.properties
+.gradle/
+build/
+captures/
+*.nav_inspector_temp
+
+# Android build products
+/app/build/
+/jplib/build/
+/buildSrc/build/
+
+# Mac-specific
+.DS_Store
+
+# Gradle
+gradle-wrapper.jar
+
+# Keystore files
+*.jks
+*.keystore
+
+# Proguard
+proguard/
+
+# API Keys (if any)
+*.txt
+
+# Log files
+*.log
+
+# Generated files
+PROJECT_ANALYSIS.md

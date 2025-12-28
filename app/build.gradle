@@ -26,6 +26,7 @@ android {
 dependencies {
     implementation project(':jplib')
     kapt "androidx.room:room-compiler:2.2.3"
+//    implementation project(":flutter")
 }
 //groovy
 configurations.all {

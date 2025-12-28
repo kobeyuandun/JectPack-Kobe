@@ -34,7 +34,10 @@ class MainFragment: BaseFragment<FragmentMainBinding>() {
     /**
      * 广场
      */
-    private val squareFragment by lazy { HomeFragment() }
+    private val squareFragment by lazy {
+        HomeFragment()
+//        RecommentFragment()
+    }
 
     /**
      * 公众号
