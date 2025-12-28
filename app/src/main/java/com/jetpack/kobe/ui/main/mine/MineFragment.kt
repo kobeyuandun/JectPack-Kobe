@@ -5,17 +5,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.jetpack.jplib.base.LazyFragment
+import com.jetpack.jplib.common.clickNoRepeat
 import com.jetpack.kobe.R
 import com.jetpack.kobe.databinding.FragmentMineBinding
 import org.greenrobot.eventbus.EventBus
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
 
 /**
  * @author yuandunbin
  * @date 2022/5/30
  */
-class MineFragment :LazyFragment<FragmentMineBinding>(){
+class MineFragment : LazyFragment<FragmentMineBinding>() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -71,20 +70,13 @@ class MineFragment :LazyFragment<FragmentMineBinding>(){
 //                toast("请先登录")
 //            }
 //        }
-//        binding.clCollect.clickNoRepeat {
-//            if (CacheUtil.isLogin()) {
-//                nav().navigate(R.id.action_main_fragment_to_my_article_fragment)
-//            } else {
-//                toast("请先登录")
-//            }
-//        }
-//        binding.clArticle.clickNoRepeat {
-//            if (CacheUtil.isLogin()) {
-//                nav().navigate(R.id.action_main_fragment_to_my_article_fragment)
-//            } else {
-//                toast("请先登录")
-//            }
-//        }
+        binding.clCollect.clickNoRepeat {
+            nav().navigate(R.id.action_main_fragment_to_collect_fragment)
+        }
+        binding.clArticle.clickNoRepeat {
+            // 跳转到新的抖音风格视频流页面
+            nav().navigate(R.id.action_main_fragment_to_my_article_fragment)
+        }
 //        binding.clWebsite.clickNoRepeat {
 //            nav().navigate(R.id.action_main_fragment_to_web_fragment, Bundle().apply {
 //                putString(Constants.WEB_URL, UrlConstants.WEBSITE)
