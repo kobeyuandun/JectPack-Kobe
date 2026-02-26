@@ -95,21 +95,21 @@ abstract class BaseFragment<BD: ViewDataBinding> :Fragment(){
     /**
      * 通过activity获取viewModel，跟随activity生命周期
      */
-    protected fun <T : ViewModel?> getActivityViewModel(modelClass: Class<T>): T {
+    protected fun <T : ViewModel> getActivityViewModel(modelClass: Class<T>): T {
         if (activityProvider == null) {
             activityProvider = ViewModelProvider(mActivity)
         }
-        return activityProvider!!.get(modelClass)
+        return activityProvider!![modelClass]
     }
 
     /**
      * 通过fragment获取viewModel，跟随fragment生命周期
      */
-    protected open fun <T : ViewModel?> getFragmentViewModel(modelClass: Class<T>): T {
+    protected open fun <T : ViewModel> getFragmentViewModel(modelClass: Class<T>): T {
         if (fragmentProvider == null) {
             fragmentProvider = ViewModelProvider(this)
         }
-        return fragmentProvider!!.get(modelClass)
+        return fragmentProvider!![modelClass]
     }
 
     /**

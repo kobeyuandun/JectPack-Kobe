@@ -52,11 +52,11 @@ abstract class BaseActivity : AppCompatActivity() {
     /**
      * 通过 activity 获取viewModel
      */
-    protected fun <T : ViewModel?> getActivityViewModel(modelClass: Class<T>): T? {
+    protected fun <T : ViewModel> getActivityViewModel(modelClass: Class<T>): T {
         if (mActivityViewModel == null) {
             mActivityViewModel = ViewModelProvider(this)
         }
-        return  mActivityViewModel?.get(modelClass)
+        return mActivityViewModel!![modelClass]
     }
 
     /**

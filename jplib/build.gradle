@@ -1,11 +1,15 @@
 apply plugin: 'com.android.library'
 apply from: "../basic.gradle"
 
+android {
+    namespace "com.jetpack.jplib"
+}
+
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
-    api(ThirdParty.blockCanary.blockCanary)
-    debugApi(ThirdParty.leakCanary.leakCanary)
-    debugApi(ThirdParty.leakCanary.leakCanaryFragment)
+    // api(ThirdParty.blockCanary.blockCanary)  // 暂时禁用，manifest 兼容性问题
+    // debugApi(ThirdParty.leakCanary.leakCanary)  // 暂时禁用，manifest 兼容性问题
+    // debugApi(ThirdParty.leakCanary.leakCanaryFragment)  // 暂时禁用，manifest 兼容性问题
     api(Kotlin.jdk8)
     api(Kotlin.coroutines.core)
     api(Kotlin.coroutines.android)
@@ -60,10 +64,10 @@ dependencies {
     api(ThirdParty.smart.smart)
     api(ThirdParty.smart.head)
 
-
-    api(ThirdParty.blockCanary.blockCanary)
-    debugApi(ThirdParty.leakCanary.leakCanary)
-    debugApi(ThirdParty.leakCanary.leakCanaryFragment)
+    // 暂时禁用，manifest 兼容性问题
+    // api(ThirdParty.blockCanary.blockCanary)
+    // debugApi(ThirdParty.leakCanary.leakCanary)
+    // debugApi(ThirdParty.leakCanary.leakCanaryFragment)
     // release版本留一个空壳(关闭leakCanary)，避免编译报错
     // releaseApi(ThirdParty.leakCanary.leakCanaryClose)
 

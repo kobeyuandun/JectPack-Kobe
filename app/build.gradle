@@ -2,14 +2,12 @@ apply plugin: 'com.android.application'
 apply from: "../basic.gradle"
 
 android {
+    namespace "com.jetpack.kobe"
     defaultConfig {
         applicationId "com.jetpack.kobe"
         versionCode Version.versionCode
         versionName Version.versionName
         multiDexEnabled true
-    }
-    dataBinding {
-        enabled = true
     }
 
     applicationVariants.all { variant ->
@@ -21,23 +19,64 @@ android {
             }
         }
     }
+
+    buildFeatures {
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion Version.composeCompilerVersion
+    }
 }
 
 dependencies {
     implementation project(':jplib')
-    kapt "androidx.room:room-compiler:2.2.3"
+
+    // Room
+    kapt Android.Room.roomCompiler
+
+    // AndroidX Core
+    implementation Android.appcompat
+    implementation Android.coreKtx
+    implementation Android.material
+    implementation Android.constraintlayout
+
+    // Lifecycle
+    implementation Android.lifecycle.liveDataKtx
+    implementation Android.lifecycle.viewModelKtx
+    implementation Android.lifecycle.runtimeKtx
+
+    // Navigation
+    implementation Android.navigation.fragmentKtx
+    implementation Android.navigation.uiKtx
+    implementation Android.navigation.compose
+
+    // Paging
+    implementation Android.paging
+
+    // Jetpack Compose
+    implementation platform("androidx.compose:compose-bom:2023.10.01")
+    implementation Android.compose.ui
+    implementation Android.compose.uiToolingPreview
+    implementation Android.compose.foundation
+    implementation Android.compose.material
+    implementation Android.compose.material3
+    implementation Android.compose.materialIcons
+    implementation Android.compose.runtime
+    implementation Android.compose.runtimeLivedata
+    implementation Android.compose.activity
+    implementation Android.compose.viewModel
+    implementation Android.compose.paging
+    // implementation Android.compose.coil  // 暂时注释掉，镜像源找不到
+
+    // Compose Debug
+    debugImplementation Android.compose.uiTooling
+
 //    implementation project(":flutter")
 }
+
 //groovy
 configurations.all {
     resolutionStrategy.force "org.antlr:antlr4-runtime:4.5.3"
     resolutionStrategy.force "org.antlr:antlr4-tool:4.5.3"
 }
-
-//kotlin DSL
-//configurations.all {
-//    resolutionStrategy {
-//        force("org.antlr:antlr4-runtime:4.7.1")
-//        force("org.antlr:antlr4-tool:4.7.1")
-//    }
-//}

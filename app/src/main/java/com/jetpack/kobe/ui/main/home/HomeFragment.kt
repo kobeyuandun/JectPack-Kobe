@@ -29,21 +29,21 @@ class HomeFragment : BaseLazyLoadingFragment<FragmentHomeBinding>(),
     }
     
     override fun observe() {
-        homeVM?.articleList?.observe(this) {
+        homeVM?.articleList?.observe(this, Observer {
             binding.smartRefresh.smartDismiss()
             adapter.submitList(it)
             binding.loadingTip.dismiss()
-        }
+        })
 
         //banner
-        homeVM?.banner?.observe(this) {
+        homeVM?.banner?.observe(this, Observer {
             bannerList = it
             initBanner()
-        }
+        })
         //请求错误
-        homeVM?.errorLiveData?.observe(this) {
+        homeVM?.errorLiveData?.observe(this, Observer {
             binding.smartRefresh.smartDismiss()
-        }
+        })
     }
     override fun lazyInit() {
         initView()

@@ -1,10 +1,14 @@
 package com.jetpack.kobe.ui.chat
 
+import android.animation.ValueAnimator
 import android.os.Handler
 import android.os.Looper
 import android.text.TextUtils
+import android.view.View
+import android.view.animation.DecelerateInterpolator
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.jetpack.jplib.base.LazyFragment
 import com.jetpack.kobe.R
 import com.jetpack.kobe.bean.MsgBean
@@ -16,6 +20,19 @@ class ChatFragment : LazyFragment<FragmentChatBinding>() {
     private lateinit var adapter: ChatAdapter
     private val handler = Handler(Looper.getMainLooper())
 
+    // 回复消息库
+    private val replyMessages = listOf(
+        "我收到了你的消息：%s",
+        "很有趣的想法！✨",
+        "让我想想... 🤔",
+        "你说得对！👍",
+        "继续说，我听着呢 👂",
+        "这个话题很有意思！💡",
+        "原来如此！😊",
+        "我完全同意你的看法",
+        "这确实是个好问题"
+    )
+
     override fun getLayoutId(): Int = R.layout.fragment_chat
 
     override fun initViewModel() {
@@ -23,48 +40,133 @@ class ChatFragment : LazyFragment<FragmentChatBinding>() {
     }
 
     override fun lazyInit() {
+        setupToolbar()
+        setupRecyclerView()
+        setupInputBar()
+    }
+
+    private fun setupToolbar() {
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()
         }
+    }
 
-        // 初始化 RecyclerView
-        binding.rvChatList.layoutManager = LinearLayoutManager(context)
+    private fun setupRecyclerView() {
+        // 先初始化 adapter
         adapter = ChatAdapter(msgList)
-        binding.rvChatList.adapter = adapter
 
-        // 添加一些默认消息
-        msgList.add(MsgBean("你好！", MsgBean.TYPE_RECEIVED))
-        adapter.notifyDataSetChanged()
+        binding.rvChatList.apply {
+            layoutManager = LinearLayoutManager(context).apply {
+                stackFromEnd = false
+            }
+            adapter = this@ChatFragment.adapter
 
+            // 添加滚动动画
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                    super.onScrollStateChanged(recyclerView, newState)
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                        recyclerView.post {
+                            val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                            val lastVisiblePosition = layoutManager.findLastVisibleItemPosition()
+                            if (lastVisiblePosition == adapter?.itemCount?.minus(1)) {
+                                // 已滚动到底部
+                            }
+                        }
+                    }
+                }
+            })
+        }
+
+        // 添加欢迎消息（带动画）
+        addMessageWithAnimation(MsgBean("你好！很高兴认识你 👋", MsgBean.TYPE_RECEIVED))
+    }
+
+    private fun setupInputBar() {
         // 发送按钮点击事件
-        binding.llInputBar.getChildAt(3).setOnClickListener { // 发送按钮是第4个子view
+        binding.flSend.setOnClickListener {
             val content = binding.etInput.text.toString()
-            if (!TextUtils.isEmpty(content)) {
-                sendMsg(content)
+            if (!TextUtils.isEmpty(content.trim())) {
+                sendMessage(content.trim())
                 binding.etInput.setText("")
+            }
+        }
+
+        // 语音按钮点击事件
+        binding.flVoice.setOnClickListener {
+            // TODO: 实现语音输入功能
+        }
+
+        // 表情按钮点击事件
+        binding.flEmoji.setOnClickListener {
+            // TODO: 实现表情面板
+        }
+
+        // 更多按钮点击事件
+        binding.flMore.setOnClickListener {
+            // TODO: 实现更多功能菜单
+        }
+
+        // 监听输入框内容变化，动态调整发送按钮状态
+        binding.etInput.afterTextChanged {
+            updateSendButtonState(!it.isNullOrEmpty())
+        }
+    }
+
+    private fun sendMessage(content: String) {
+        // 添加发送的消息（带动画）
+        addMessageWithAnimation(MsgBean(content, MsgBean.TYPE_SENT))
+
+        // 模拟接收回复（随机延迟）
+        val delay = (800..1500).random()
+        handler.postDelayed({
+            val randomReply = replyMessages.random()
+            val reply = String.format(randomReply, content)
+            addMessageWithAnimation(MsgBean(reply, MsgBean.TYPE_RECEIVED))
+        }, delay.toLong())
+    }
+
+    private fun addMessageWithAnimation(msg: MsgBean) {
+        val position = msgList.size
+        msgList.add(msg)
+        adapter.notifyItemInserted(position)
+
+        // 平滑滚动到最新消息
+        binding.rvChatList.post {
+            binding.rvChatList.smoothScrollToPosition(msgList.size - 1)
+        }
+
+        // 新消息淡入动画
+        binding.rvChatList.post {
+            val viewHolder = binding.rvChatList.findViewHolderForAdapterPosition(position)
+            viewHolder?.itemView?.apply {
+                alpha = 0f
+                animate()
+                    .alpha(1f)
+                    .setDuration(300)
+                    .setInterpolator(DecelerateInterpolator())
+                    .start()
             }
         }
     }
 
-    private fun sendMsg(content: String) {
-        // 1. 添加发送的消息到列表
-        msgList.add(MsgBean(content, MsgBean.TYPE_SENT))
-        adapter.notifyItemInserted(msgList.size - 1)
-        binding.rvChatList.scrollToPosition(msgList.size - 1)
-
-        // 2. 模拟接收回复
-        handler.postDelayed({
-            receiveMsg("我收到了你的消息：$content")
-        }, 1000)
-    }
-
-    private fun receiveMsg(content: String) {
-        msgList.add(MsgBean(content, MsgBean.TYPE_RECEIVED))
-        adapter.notifyItemInserted(msgList.size - 1)
-        binding.rvChatList.scrollToPosition(msgList.size - 1)
+    private fun updateSendButtonState(canSend: Boolean) {
+        binding.flSend.alpha = if (canSend) 1.0f else 0.5f
+        binding.flSend.isEnabled = canSend
     }
 
     override fun onClick() {
         // 其他点击事件
     }
+}
+
+// EditText 扩展函数 - 监听文本变化
+private fun android.widget.EditText.afterTextChanged(afterTextChanged: (String?) -> Unit) {
+    this.addTextChangedListener(object : android.text.TextWatcher {
+        override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+        override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+        override fun afterTextChanged(editable: android.text.Editable?) {
+            afterTextChanged.invoke(editable?.toString())
+        }
+    })
 }

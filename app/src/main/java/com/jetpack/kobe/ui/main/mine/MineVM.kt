@@ -45,7 +45,7 @@ class MineVM : BaseViewModel() {
     private val repo by lazy { MineRepo() }
     val internalLiveData = MutableLiveData<IntegralBean>()
 
-    fun getInternal() {
+    fun fetchIntegral() {
         launch {
             var integralBean:IntegralBean? = null
             PrefUtils.getObject(Constants.INTEGRAL_INFO)?.let {

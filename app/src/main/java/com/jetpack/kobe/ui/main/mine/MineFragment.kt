@@ -32,7 +32,7 @@ class MineFragment : LazyFragment<FragmentMineBinding>() {
 
     override fun lazyInit() {
         binding.vm = mineVM
-        mineVM?.getInternal()
+        mineVM?.fetchIntegral()
     }
 
     override fun getLayoutId() = R.layout.fragment_mine

@@ -20,7 +20,7 @@ object OkLogger {
     }
 
     fun v(tag: String?, msg: String?) {
-        if (isLogEnable) Log.v(tag, msg)
+        if (isLogEnable && msg != null) Log.v(tag ?: "OkHttp", msg)
     }
 
     fun d(msg: String?) {
@@ -28,7 +28,7 @@ object OkLogger {
     }
 
     fun d(tag: String?, msg: String?) {
-        if (isLogEnable) Log.d(tag, msg)
+        if (isLogEnable && msg != null) Log.d(tag ?: "OkHttp", msg)
     }
 
     fun i(msg: String?) {
@@ -36,7 +36,7 @@ object OkLogger {
     }
 
     fun i(tag: String?, msg: String?) {
-        if (isLogEnable) Log.i(tag, msg)
+        if (isLogEnable && msg != null) Log.i(tag ?: "OkHttp", msg)
     }
 
     fun w(msg: String?) {
@@ -44,7 +44,7 @@ object OkLogger {
     }
 
     fun w(tag: String?, msg: String?) {
-        if (isLogEnable) Log.w(tag, msg)
+        if (isLogEnable && msg != null) Log.w(tag ?: "OkHttp", msg)
     }
 
     fun e(msg: String?) {
@@ -52,7 +52,7 @@ object OkLogger {
     }
 
     fun e(tag: String?, msg: String?) {
-        if (isLogEnable) Log.e(tag, msg)
+        if (isLogEnable && msg != null) Log.e(tag ?: "OkHttp", msg)
     }
 
     fun printStackTrace(t: Throwable?) {

@@ -12,77 +12,181 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#EDEDED">
+        android:background="@color/chat_bg_color">
+
+        <!-- 渐变背景 -->
+        <View
+            android:id="@+id/bg_gradient"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@drawable/chat_gradient_bg"
+            app:layout_constraintBottom_toBottomOf="@id/toolbar"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <!-- 顶部标题栏 -->
-        <androidx.appcompat.widget.Toolbar
+        <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/white"
+            android:background="@android:color/transparent"
+            android:elevation="0dp"
             app:layout_constraintTop_toTopOf="parent">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="聊天"
-                android:textColor="@color/black"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-        </androidx.appcompat.widget.Toolbar>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="智能助手"
+                    android:textColor="@color/chat_title_text"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="在线"
+                    android:textColor="@color/chat_online_status"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </com.google.android.material.appbar.MaterialToolbar>
+
+        <!-- 分割线 -->
+        <View
+            android:id="@+id/divider"
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:background="@color/chat_divider"
+            app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
         <!-- 聊天列表 -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_chat_list"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            app:layout_constraintBottom_toTopOf="@+id/ll_input_bar"
-            app:layout_constraintTop_toBottomOf="@+id/toolbar"
-            tools:listitem="@layout/item_chat_msg_left" />
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            app:layout_constraintBottom_toTopOf="@id/input_bar_divider"
+            app:layout_constraintTop_toBottomOf="@id/divider"
+            tools:listitem="@layout/item_chat_msg_left_enhanced" />
 
-        <!-- 底部输入栏 -->
+        <!-- 底部分割线 -->
+        <View
+            android:id="@+id/input_bar_divider"
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:background="@color/chat_divider"
+            app:layout_constraintBottom_toTopOf="@id/ll_input_bar" />
+
+        <!-- 底部输入栏容器 -->
         <LinearLayout
             android:id="@+id/ll_input_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#F7F7F7"
+            android:background="@android:color/white"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:padding="8dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
             app:layout_constraintBottom_toBottomOf="parent">
 
-            <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@android:drawable/ic_menu_upload"
-                app:tint="#7F7F7F" />
+            <!-- 语音按钮 -->
+            <FrameLayout
+                android:id="@+id/fl_voice"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/chat_circle_button_bg">
 
-            <EditText
-                android:id="@+id/et_input"
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_voice"
+                    app:tint="@color/chat_icon_tint" />
+            </FrameLayout>
+
+            <!-- 输入框容器 -->
+            <FrameLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
-                android:minHeight="40dp"
-                android:paddingHorizontal="10dp"
-                android:textSize="16sp" />
+                android:background="@drawable/chat_input_bg">
 
-            <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginEnd="8dp"
-                android:src="@android:drawable/ic_input_add"
-                app:tint="#7F7F7F" />
+                <EditText
+                    android:id="@+id/et_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@null"
+                    android:maxLines="4"
+                    android:minHeight="40dp"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="8dp"
+                    android:textColor="@color/chat_input_text"
+                    android:textColorHint="@color/chat_input_hint"
+                    android:textSize="15sp"
+                    android:hint="输入消息..."
+                    tools:text="你好，很高兴认识你" />
+            </FrameLayout>
 
-            <Button
-                android:layout_width="60dp"
-                android:layout_height="35dp"
-                android:backgroundTint="#07C160"
-                android:text="发送"
-                android:textColor="@color/white"
-                android:textSize="14sp" />
+            <!-- 表情按钮 -->
+            <FrameLayout
+                android:id="@+id/fl_emoji"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="4dp">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_emoji"
+                    app:tint="@color/chat_icon_tint" />
+            </FrameLayout>
+
+            <!-- 加号按钮 -->
+            <FrameLayout
+                android:id="@+id/fl_more"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="6dp">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_add_circle"
+                    app:tint="@color/chat_icon_tint" />
+            </FrameLayout>
+
+            <!-- 发送按钮 -->
+            <FrameLayout
+                android:id="@+id/fl_send"
+                android:layout_width="44dp"
+                android:layout_height="38dp"
+                android:background="@drawable/chat_send_button_bg">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="发送"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

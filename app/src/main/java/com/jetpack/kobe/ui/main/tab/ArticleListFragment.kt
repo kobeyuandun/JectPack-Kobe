@@ -14,9 +14,6 @@ import com.jetpack.jplib.common.smartDismiss
 import com.jetpack.kobe.R
 import com.jetpack.kobe.databinding.FragmentArticleBinding
 import com.jetpack.kobe.ui.adapter.ArticleAdapter
-import kotlinx.android.synthetic.main.fragment_article.*
-import kotlinx.android.synthetic.main.fragment_home.loadingTip
-import kotlinx.android.synthetic.main.fragment_home.smartRefresh
 
 /**
  * des 文章列表fragment
@@ -48,16 +45,16 @@ class ArticleListFragment : BaseFragment<FragmentArticleBinding>() {
 
     override fun observe() {
         articleVM?.articleLiveData?.observe(this, Observer {
-            smartRefresh.smartDismiss()
-            loadingTip.dismiss()
+            binding.smartRefresh.smartDismiss()
+            binding.loadingTip.dismiss()
             adapter.submitList(it)
         })
         articleVM?.errorLiveData?.observe(this, Observer {
-            smartRefresh.smartDismiss()
+            binding.smartRefresh.smartDismiss()
             if (it.errorCode == -100) {
                 //显示网络错误
-                loadingTip.showInternetError()
-                loadingTip.setReloadListener {
+                binding.loadingTip.showInternetError()
+                binding.loadingTip.setReloadListener {
                     articleVM?.getArticleList(type, tabId)
                 }
             }
@@ -70,20 +67,21 @@ class ArticleListFragment : BaseFragment<FragmentArticleBinding>() {
         initView()
         loadData()
     }
+
     override fun initView() {
         //关闭更新动画
-        (rvArticleList.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
+        (binding.rvArticleList.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
         //下拉刷新
-        smartRefresh.setOnRefreshListener {
+        binding.smartRefresh.setOnRefreshListener {
             articleVM?.getArticleList(type, tabId)
         }
         //上拉加载
-        smartRefresh.setOnLoadMoreListener {
-            articleVM?.loadMoreArticleList(type,tabId)
+        binding.smartRefresh.setOnLoadMoreListener {
+            articleVM?.loadMoreArticleList(type, tabId)
         }
-        smartRefresh.smartConfig()
+        binding.smartRefresh.smartConfig()
         adapter.apply {
-            rvArticleList.adapter = this
+            binding.rvArticleList.adapter = this
             setOnItemClickListener { i, _ ->
                 nav().navigate(
                     R.id.action_main_fragment_to_web_fragment,
@@ -114,7 +112,7 @@ class ArticleListFragment : BaseFragment<FragmentArticleBinding>() {
 
     override fun loadData() {
         articleVM?.getArticleList(type, tabId)
-        loadingTip.loading()
+        binding.loadingTip.loading()
     }
 
     override fun getLayoutId() = R.layout.fragment_article
@@ -173,11 +171,13 @@ class ArticleListFragment : BaseFragment<FragmentArticleBinding>() {
     override fun onDestroyView() {
         super.onDestroyView()
         Log.i("zszs","onDestroyView")
+
     }
 
     override fun onDestroy() {
         super.onDestroy()
         Log.i("zszs","onDestroy")
+
     }
 
     override fun onDetach() {

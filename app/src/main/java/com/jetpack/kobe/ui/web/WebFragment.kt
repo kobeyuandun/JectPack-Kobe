@@ -70,7 +70,7 @@ class WebFragment : BaseFragment<FragmentWebBinding>() {
                 return false
             }
         }
-        binding.webView.loadUrl(loadUrl)
+        loadUrl?.let { binding.webView.loadUrl(it) }
         webVM?.maxProgress?.set(100)
         binding.webView.webChromeClient = object : WebChromeClient() {
             override fun onProgressChanged(view: WebView?, newProgress: Int) {

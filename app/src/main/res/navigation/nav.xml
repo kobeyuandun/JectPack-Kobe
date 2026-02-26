@@ -75,11 +75,11 @@
         android:label="WebFragment"
         tools:layout="@layout/fragment_web" />
 
-    <!-- 新增聊天页面 -->
+    <!-- 新增聊天页面 (Compose版本) -->
     <fragment
         android:id="@+id/chat_fragment"
-        android:name="com.jetpack.kobe.ui.chat.ChatFragment"
-        android:label="ChatFragment"
+        android:name="com.jetpack.kobe.ui.chat.ComposeChatFragment"
+        android:label="ComposeChatFragment"
         tools:layout="@layout/fragment_chat" />
         
     <!-- 新增视频流页面 (对应 my_article_fragment ID) -->

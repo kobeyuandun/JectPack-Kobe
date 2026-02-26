@@ -16,7 +16,7 @@ class BizInterceptor :HiInterceptor {
             request.addHeader("auth-token", "11111")
         } else if (chain.response() != null) {
             Log.d("BizInterceptor", chain.request().endPointUrl())
-            Log.d("BizInterceptor", chain.response()!!.rawData)
+            Log.d("BizInterceptor", chain.response()!!.rawData ?: "null")
         }
         return false
     }

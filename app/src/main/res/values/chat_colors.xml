@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 聊天界面颜色 -->
+    <color name="chat_bg_color">#F8FAFC</color>
+    <color name="chat_title_text">#1A1A1A</color>
+    <color name="chat_online_status">#07C160</color>
+    <color name="chat_divider">#E5E7EB</color>
+    <color name="chat_bubble_left_text">#1A1A1A</color>
+    <color name="chat_bubble_right_text">#FFFFFF</color>
+    <color name="chat_time_text">#9CA3AF</color>
+    <color name="chat_input_text">#1A1A1A</color>
+    <color name="chat_input_hint">#9CA3AF</color>
+    <color name="chat_icon_tint">#666666</color>
+    <color name="chat_send_button_normal">#07C160</color>
+    <color name="chat_send_button_disabled">#E5E7EB</color>
+</resources>
