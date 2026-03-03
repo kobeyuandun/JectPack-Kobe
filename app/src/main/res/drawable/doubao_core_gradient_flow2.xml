@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <!-- 另一个角度的渐变，用于叠加产生流动效果 -->
+    <gradient
+        android:type="linear"
+        android:angle="135"
+        android:startColor="#C4E4FF"
+        android:centerColor="#FFB6D9"
+        android:endColor="#E0B3FF" />
+</shape>

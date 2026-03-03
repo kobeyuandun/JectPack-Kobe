@@ -2,6 +2,7 @@ package com.jetpack.kobe
 
 import android.Manifest
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import com.jetpack.jplib.base.BaseActivity
 import com.jetpack.kobe.view.DialogUtils
@@ -30,7 +31,12 @@ class SplashActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
     }
 
     override fun init(savedInstanceState: Bundle?) {
-        requestPermission()
+        // Android 13+ 不需要申请存储权限即可访问媒体文件
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            startIntent()
+        } else {
+            requestPermission()
+        }
     }
 
     private fun requestPermission() {
@@ -64,7 +70,7 @@ class SplashActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
     }
 
     private fun startIntent() {
-       disposable = Observable.timer(2000, TimeUnit.MILLISECONDS).subscribe {
+       disposable = Observable.timer(1500, TimeUnit.MILLISECONDS).subscribe {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
         }
@@ -78,9 +84,12 @@ class SplashActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
     override fun getLayoutId() = R.layout.activity_splash
 
     override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
+        startIntent()
     }
 
     override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>) {
+        // 权限被拒绝，仍然继续启动应用（存储权限不是必需的）
+        startIntent()
     }
 
     private fun changeTheme() {

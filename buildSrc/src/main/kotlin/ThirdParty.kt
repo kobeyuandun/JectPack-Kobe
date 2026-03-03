@@ -55,4 +55,11 @@ object ThirdParty {
         const val leakCanaryFragment = "com.squareup.leakcanary:leakcanary-support-fragment:$leakCanary_version"
         const val leakCanaryClose = "com.squareup.leakcanary:leakcanary-android-no-op:$leakCanary_version"
     }
+
+    val agora = Agora
+    object Agora {
+        // 声网语音 SDK - 使用 4.x 版本
+        private const val agora_version = "4.0.1"
+        const val voiceSDK = "io.agora.rtc:voice-sdk:$agora_version"
+    }
 }

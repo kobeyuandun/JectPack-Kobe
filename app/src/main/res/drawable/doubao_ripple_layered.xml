@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 外圈渐变：粉紫色 -->
+    <item>
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="50%"
+                android:centerColor="#80FFB6D9"
+                android:endColor="#00FFB6D9" />
+        </shape>
+    </item>
+
+    <!-- 中圈渐变：紫色 -->
+    <item
+        android:left="15dp"
+        android:top="15dp"
+        android:right="15dp"
+        android:bottom="15dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="50%"
+                android:centerColor="#80E0B3FF"
+                android:endColor="#00E0B3FF" />
+        </shape>
+    </item>
+
+    <!-- 内圈渐变：蓝白色 -->
+    <item
+        android:left="30dp"
+        android:top="30dp"
+        android:right="30dp"
+        android:bottom="30dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="50%"
+                android:centerColor="#80C4E4FF"
+                android:endColor="#00C4E4FF" />
+        </shape>
+    </item>
+
+    <!-- 核心白色圆 -->
+    <item
+        android:left="45dp"
+        android:top="45dp"
+        android:right="45dp"
+        android:bottom="45dp">
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

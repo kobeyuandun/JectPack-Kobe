@@ -13,6 +13,7 @@ import com.jetpack.jplib.base.LazyFragment
 import com.jetpack.kobe.R
 import com.jetpack.kobe.bean.MsgBean
 import com.jetpack.kobe.databinding.FragmentChatBinding
+import com.jetpack.kobe.ui.voice.DoubaoVoiceCallActivity
 
 class ChatFragment : LazyFragment<FragmentChatBinding>() {
 
@@ -92,9 +93,9 @@ class ChatFragment : LazyFragment<FragmentChatBinding>() {
             }
         }
 
-        // 语音按钮点击事件
+        // 语音按钮点击事件 - 启动语音通话
         binding.flVoice.setOnClickListener {
-            // TODO: 实现语音输入功能
+            startVoiceCall()
         }
 
         // 表情按钮点击事件
@@ -153,6 +154,15 @@ class ChatFragment : LazyFragment<FragmentChatBinding>() {
     private fun updateSendButtonState(canSend: Boolean) {
         binding.flSend.alpha = if (canSend) 1.0f else 0.5f
         binding.flSend.isEnabled = canSend
+    }
+
+    /**
+     * 启动语音通话（豆包风格）
+     */
+    private fun startVoiceCall() {
+        // 使用时间戳作为频道名，保证每次通话都是新频道
+        val channelName = "voice_call_${System.currentTimeMillis()}"
+        DoubaoVoiceCallActivity.start(requireContext(), channelName, "AI 助手")
     }
 
     override fun onClick() {

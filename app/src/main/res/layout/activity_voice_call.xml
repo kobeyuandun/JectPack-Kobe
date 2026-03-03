@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="vm"
+            type="com.jetpack.kobe.ui.voice.VoiceCallViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/voice_call_gradient_bg">
+
+        <!-- 顶部状态栏区域 -->
+        <LinearLayout
+            android:id="@+id/ll_top_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="48dp"
+            android:paddingBottom="16dp"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/tv_call_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="正在连接..."
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                tools:text="通话中" />
+
+            <TextView
+                android:id="@+id/tv_call_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="8dp"
+                android:text="00:00"
+                android:textColor="@color/white_80"
+                android:textSize="32sp"
+                android:textStyle="bold"
+                tools:text="02:34" />
+        </LinearLayout>
+
+        <!-- 语音波形动画区域 -->
+        <FrameLayout
+            android:id="@+id/fl_wave_container"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@id/ll_control_buttons"
+            app:layout_constraintTop_toBottomOf="@id/ll_top_bar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <!-- 中心头像/图标 -->
+            <FrameLayout
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_gravity="center">
+
+                <!-- 外圈波纹 -->
+                <View
+                    android:id="@+id/view_wave_outer"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/voice_call_wave_ripple"
+                    android:alpha="0.3" />
+
+                <!-- 中圈波纹 -->
+                <View
+                    android:id="@+id/view_wave_middle"
+                    android:layout_width="150dp"
+                    android:layout_height="150dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/voice_call_wave_ripple"
+                    android:alpha="0.5" />
+
+                <!-- 内圈头像容器 -->
+                <FrameLayout
+                    android:id="@+id/fl_avatar_container"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/voice_call_avatar_bg">
+
+                    <ImageView
+                        android:id="@+id/iv_avatar"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_voice_call_person"
+                        app:tint="@color/voice_call_icon_color" />
+                </FrameLayout>
+            </FrameLayout>
+        </FrameLayout>
+
+        <!-- 用户信息 -->
+        <LinearLayout
+            android:id="@+id/ll_user_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginBottom="40dp"
+            app:layout_constraintBottom_toTopOf="@id/ll_control_buttons"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:id="@+id/tv_user_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AI 助手"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                tools:text="AI 助手" />
+
+            <TextView
+                android:id="@+id/tv_user_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text=""
+                android:textColor="@color/white_60"
+                android:textSize="14sp"
+                tools:text="正在说话..." />
+        </LinearLayout>
+
+        <!-- 控制按钮区域 -->
+        <LinearLayout
+            android:id="@+id/ll_control_buttons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingStart="32dp"
+            android:paddingEnd="32dp"
+            android:paddingBottom="48dp"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <!-- 静音按钮 -->
+            <FrameLayout
+                android:id="@+id/fl_mute"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="@drawable/voice_call_control_button_bg">
+
+                <ImageView
+                    android:id="@+id/iv_mute"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_voice_unmute"
+                    app:tint="@color/voice_call_control_icon" />
+            </FrameLayout>
+
+            <!-- 挂断按钮 -->
+            <FrameLayout
+                android:id="@+id/fl_hangup"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:background="@drawable/voice_call_hangup_button_bg">
+
+                <ImageView
+                    android:id="@+id/iv_hangup"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_voice_hangup"
+                    app:tint="@color/white" />
+            </FrameLayout>
+
+            <!-- 扬声器按钮 -->
+            <FrameLayout
+                android:id="@+id/fl_speaker"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="@drawable/voice_call_control_button_bg">
+
+                <ImageView
+                    android:id="@+id/iv_speaker"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_voice_speaker_on"
+                    app:tint="@color/voice_call_control_icon" />
+            </FrameLayout>
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

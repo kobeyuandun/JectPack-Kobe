@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 底层：白色光晕 -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFF" />
+        </shape>
+    </item>
+
+    <!-- 中层：粉色流动 -->
+    <item
+        android:left="5dp"
+        android:top="5dp"
+        android:right="5dp"
+        android:bottom="5dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="60%p"
+                android:centerColor="#60FFB6D9"
+                android:endColor="#00FFB6D9" />
+        </shape>
+    </item>
+
+    <!-- 上层：紫色流动 -->
+    <item
+        android:left="8dp"
+        android:top="8dp"
+        android:right="8dp"
+        android:bottom="8dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="50%p"
+                android:centerColor="#50E0B3FF"
+                android:endColor="#00E0B3FF" />
+        </shape>
+    </item>
+
+    <!-- 最上层：蓝色流动 -->
+    <item
+        android:left="10dp"
+        android:top="10dp"
+        android:right="10dp"
+        android:bottom="10dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="40%p"
+                android:centerColor="#40C4E4FF"
+                android:endColor="#00C4E4FF" />
+        </shape>
+    </item>
+</layer-list>

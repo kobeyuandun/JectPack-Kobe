@@ -102,6 +102,14 @@
         <item name="android:windowDisablePreview">true</item>
     </style>
 
+    <!-- 豆包风格语音通话主题 -->
+    <style name="DoubaoVoiceCallTheme" parent="Theme.Design.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/doubao_voice_call_bg</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
 
 
     <declare-styleable name="SwipeMenuView">

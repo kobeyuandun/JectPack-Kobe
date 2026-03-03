@@ -28,6 +28,9 @@ allprojects {
         google()
         mavenCentral()
         maven { url "https://jitpack.io" }
+        // 声网 Agora Maven 仓库
+        maven { url "https://download.agora.io/sdk" }
+        maven { url "https://download.agora.io/maven" }
 
     }
 }

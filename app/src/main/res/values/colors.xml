@@ -9,4 +9,18 @@
     <color name="white">#FFFFFFFF</color>
 
     <color name="transparent">#00FFFFFF</color>
+
+    <!-- 语音通话相关颜色 -->
+    <color name="white_60">#99FFFFFF</color>
+    <color name="white_80">#CCFFFFFF</color>
+    <color name="voice_call_icon_color">#FFFFFF</color>
+    <color name="voice_call_control_icon">#FFFFFF</color>
+
+    <!-- 豆包风格语音通话颜色 -->
+    <color name="doubao_text_primary">#CC333333</color>
+    <color name="doubao_text_hint">#80666666</color>
+    <color name="doubao_close_red">#FFFF4444</color>
+    <color name="doubao_ripple_start">#B3FFB6D9</color>
+    <color name="doubao_ripple_middle">#CCFFC4E4</color>
+    <color name="doubao_ripple_inner">#E5E0B3FF</color>
 </resources>

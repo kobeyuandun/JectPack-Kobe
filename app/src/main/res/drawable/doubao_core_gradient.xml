@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <!-- 三色渐变：粉 -> 紫 -> 蓝 -->
+    <gradient
+        android:type="sweep"
+        android:angle="0"
+        android:startColor="#FFB6D9"
+        android:centerColor="#E0B3FF"
+        android:endColor="#C4E4FF" />
+</shape>

@@ -1,5 +1,6 @@
 package com.jetpack.kobe.ui.chat
 
+import android.content.Context
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -33,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.jetpack.kobe.bean.MsgBean
+import com.jetpack.kobe.ui.voice.DoubaoVoiceCallActivity
 
 /**
  * Jetpack Compose 版本的聊天 Fragment
@@ -51,10 +53,20 @@ class ComposeChatFragment : Fragment() {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 ChatScreen(
-                    onBackClick = { findNavController().navigateUp() }
+                    onBackClick = { findNavController().navigateUp() },
+                    onVoiceCallClick = { startVoiceCall() }
                 )
             }
         }
+    }
+
+    /**
+     * 启动语音通话
+     */
+    private fun startVoiceCall() {
+        // 使用时间戳作为频道名，保证每次通话都是新频道
+        val channelName = "voice_call_${System.currentTimeMillis()}"
+        DoubaoVoiceCallActivity.start(requireContext(), channelName, "AI 助手")
     }
 }
 
@@ -64,7 +76,8 @@ class ComposeChatFragment : Fragment() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onVoiceCallClick: () -> Unit = {}
 ) {
     var messageText by remember { mutableStateOf("") }
     val messages = remember { mutableStateListOf<MsgBean>() }
@@ -95,6 +108,7 @@ fun ChatScreen(
         topBar = {
             ChatTopBar(
                 onBackClick = onBackClick,
+                onVoiceCallClick = onVoiceCallClick,
                 userName = "智能助手",
                 userStatus = "在线"
             )
@@ -170,6 +184,7 @@ fun ChatScreen(
 @Composable
 fun ChatTopBar(
     onBackClick: () -> Unit,
+    onVoiceCallClick: () -> Unit,
     userName: String,
     userStatus: String
 ) {
@@ -201,11 +216,12 @@ fun ChatTopBar(
             }
         },
         actions = {
-            IconButton(onClick = { }) {
+            // 语音通话按钮
+            IconButton(onClick = onVoiceCallClick) {
                 Icon(
                     imageVector = Icons.Default.Phone,
                     contentDescription = "语音通话",
-                    tint = Color(0xFF666666)
+                    tint = Color(0xFF22C55E)
                 )
             }
             IconButton(onClick = { }) {
@@ -462,7 +478,7 @@ fun getCurrentTime(): String {
 @Composable
 fun ChatScreenPreview() {
     MaterialTheme {
-        ChatScreen(onBackClick = {})
+        ChatScreen(onBackClick = {}, onVoiceCallClick = {})
     }
 }
 
@@ -505,6 +521,7 @@ fun ChatInputBarPreview() {
 fun ChatTopBarPreview() {
     ChatTopBar(
         onBackClick = {},
+        onVoiceCallClick = {},
         userName = "智能助手",
         userStatus = "在线"
     )
