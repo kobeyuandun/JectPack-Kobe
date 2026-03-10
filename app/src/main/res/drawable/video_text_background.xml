@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 视频底部文字区域的渐变背景，确保文字可读性 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="90"
+        android:startColor="#00000000"
+        android:endColor="#AA000000"
+        android:type="linear" />
+</shape>

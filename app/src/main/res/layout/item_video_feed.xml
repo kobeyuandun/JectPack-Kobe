@@ -6,24 +6,29 @@
     android:layout_height="match_parent"
     android:background="#000000">
 
-    <!-- 模拟视频背景 (全屏) -->
-    <View
-        android:id="@+id/v_video_bg"
+    <!-- ExoPlayer 视频播放器视图 -->
+    <com.google.android.exoplayer2.ui.PlayerView
+        android:id="@+id/player_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#333333" />
+        app:show_buffering="when_playing"
+        app:use_controller="false"
+        app:resize_mode="zoom"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- 播放按钮 (模拟) -->
-    <ImageView
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:src="@android:drawable/ic_media_play"
-        android:alpha="0.5"
+    <!-- 加载中进度条 -->
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="#FFFFFF" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- 底部信息区域 -->
     <LinearLayout
@@ -31,6 +36,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
+        android:background="@drawable/video_text_background"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <TextView
@@ -39,30 +45,36 @@
             android:layout_height="wrap_content"
             android:text="视频标题"
             android:textColor="#FFFFFF"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold"
-            android:shadowColor="#80000000"
-            android:shadowDx="2"
-            android:shadowDy="2"
-            android:shadowRadius="4" />
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/tv_author"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="作者名称"
+            android:textColor="#DDDDDD"
+            android:textSize="14sp"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/tv_desc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="这里是视频的描述信息，可能会比较长，用来测试多行显示的效果。"
+            android:text="这里是视频的描述信息"
             android:textColor="#DDDDDD"
             android:textSize="14sp"
-            android:shadowColor="#80000000"
-            android:shadowDx="1"
-            android:shadowDy="1"
-            android:shadowRadius="2" />
-        
+            android:maxLines="3"
+            android:ellipsize="end" />
+
         <!-- 底部占位，避免文字太靠底 -->
         <View
             android:layout_width="match_parent"
-            android:layout_height="40dp" />
+            android:layout_height="50dp" />
 
     </LinearLayout>
 
@@ -77,52 +89,104 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- 头像 -->
         <ImageView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@mipmap/ic_launcher_round" />
-            
-        <View android:layout_width="1dp" android:layout_height="20dp" />
+            android:id="@+id/iv_avatar"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:src="@mipmap/ic_launcher_round"
+            android:scaleType="centerCrop" />
 
+        <!-- 关注按钮 (在头像下方的小红点) -->
         <ImageView
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:src="@android:drawable/btn_star"
-            app:tint="#FFFFFF" />
-        <TextView
+            android:id="@+id/iv_follow"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginTop="-8dp"
+            android:src="@android:drawable/ic_menu_add"
+            android:background="@android:drawable/presence_online"
+            android:padding="2dp" />
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="20dp" />
+
+        <!-- 点赞 -->
+        <LinearLayout
+            android:id="@+id/ll_like"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="1.2w"
-            android:textColor="#FFFFFF"
-            android:textSize="12sp"/>
+            android:orientation="vertical"
+            android:gravity="center">
 
-        <View android:layout_width="1dp" android:layout_height="15dp" />
+            <ImageView
+                android:id="@+id/iv_like"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:src="@android:drawable/btn_star_big_off"
+                app:tint="#FFFFFF" />
 
-        <ImageView
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:src="@android:drawable/stat_notify_chat"
-            app:tint="#FFFFFF" />
-        <TextView
+            <TextView
+                android:id="@+id/tv_like_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="15dp" />
+
+        <!-- 评论 -->
+        <LinearLayout
+            android:id="@+id/ll_comment"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="328"
-            android:textColor="#FFFFFF"
-            android:textSize="12sp"/>
-            
-        <View android:layout_width="1dp" android:layout_height="15dp" />
-            
-         <ImageView
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:src="@android:drawable/ic_menu_share"
-            app:tint="#FFFFFF" />
-        <TextView
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:src="@android:drawable/stat_notify_chat"
+                app:tint="#FFFFFF" />
+
+            <TextView
+                android:id="@+id/tv_comment_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="15dp" />
+
+        <!-- 分享 -->
+        <LinearLayout
+            android:id="@+id/ll_share"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="分享"
-            android:textColor="#FFFFFF"
-            android:textSize="12sp"/>
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:src="@android:drawable/ic_menu_share"
+                app:tint="#FFFFFF" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="分享"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp" />
+        </LinearLayout>
 
     </LinearLayout>
 

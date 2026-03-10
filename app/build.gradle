@@ -82,6 +82,10 @@ dependencies {
     // Agora 声网语音通话 SDK
     implementation ThirdParty.agora.voiceSDK
 
+    // ExoPlayer 视频播放
+    implementation ThirdParty.exoPlayer.exoPlayer
+    implementation ThirdParty.exoPlayer.ui
+
 //    implementation project(":flutter")
 }
 

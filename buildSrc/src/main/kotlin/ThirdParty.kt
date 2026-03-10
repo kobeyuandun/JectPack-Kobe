@@ -62,4 +62,11 @@ object ThirdParty {
         private const val agora_version = "4.0.1"
         const val voiceSDK = "io.agora.rtc:voice-sdk:$agora_version"
     }
+
+    val exoPlayer = ExoPlayer
+    object ExoPlayer {
+        private const val exoplayer_version = "2.19.1"
+        const val exoPlayer = "com.google.android.exoplayer:exoplayer:$exoplayer_version"
+        const val ui = "com.google.android.exoplayer:exoplayer-ui:$exoplayer_version"
+    }
 }
