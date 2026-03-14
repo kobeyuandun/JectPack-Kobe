@@ -1,12 +1,15 @@
 package com.jetpack.kobe.ui.chat
 
-import android.content.Context
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -21,20 +24,32 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.jetpack.kobe.bean.MsgBean
 import com.jetpack.kobe.ui.voice.DoubaoVoiceCallActivity
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+/**
+ * 消息状态数据类
+ * @param msgBean 原始消息数据
+ * @param isTyping 是否正在打字（用于接收消息的打字机效果）
+ * @param id 唯一标识符
+ */
+data class MessageState(
+    val msgBean: MsgBean,
+    val isTyping: Boolean = false,
+    val id: String = java.util.UUID.randomUUID().toString()
+)
 
 /**
  * Jetpack Compose 版本的聊天 Fragment
@@ -45,10 +60,10 @@ class ComposeChatFragment : Fragment() {
     private val handler = Handler(Looper.getMainLooper())
 
     override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: android.view.ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): android.view.View {
+    ): View? {
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
@@ -80,14 +95,19 @@ fun ChatScreen(
     onVoiceCallClick: () -> Unit = {}
 ) {
     var messageText by remember { mutableStateOf("") }
-    val messages = remember { mutableStateListOf<MsgBean>() }
+    val messages = remember { mutableStateListOf<MessageState>() }
     val listState = rememberLazyListState()
-    val handler = remember { Handler(Looper.getMainLooper()) }
+    val coroutineScope = rememberCoroutineScope()
 
     // 初始化欢迎消息
     LaunchedEffect(Unit) {
         if (messages.isEmpty()) {
-            messages.add(MsgBean("你好！很高兴认识你 👋\n这是使用 Jetpack Compose 构建的聊天界面", MsgBean.TYPE_RECEIVED))
+            messages.add(
+                MessageState(
+                    MsgBean("你好！很高兴认识你 👋\n这是使用 Jetpack Compose 构建的聊天界面", MsgBean.TYPE_RECEIVED),
+                    isTyping = true
+                )
+            )
         }
     }
 
@@ -120,27 +140,49 @@ fun ChatScreen(
                 onSendClick = {
                     if (messageText.isNotBlank()) {
                         // 添加发送的消息
-                        messages.add(MsgBean(messageText, MsgBean.TYPE_SENT))
+                        messages.add(
+                            MessageState(
+                                MsgBean(messageText, MsgBean.TYPE_SENT),
+                                isTyping = false
+                            )
+                        )
                         val sentMessage = messageText
                         messageText = ""
 
-                        // 模拟接收回复
-                        handler.postDelayed({
-                            val replies = listOf(
-                                "我收到了你的消息：$sentMessage",
-                                "很有趣的想法！✨",
-                                "让我想想... 🤔",
-                                "你说得对！👍",
-                                "继续说，我听着呢 👂",
-                                "这个话题很有意思！💡",
-                                "原来如此！😊",
-                                "我完全同意你的看法",
-                                "这确实是个好问题",
-                                "感谢你的分享！"
+                        // 模拟接收回复（带打字机效果）
+                        // 首先添加一个"正在输入"的状态消息
+                        val typingIndex = messages.size
+                        messages.add(
+                            MessageState(
+                                MsgBean("", MsgBean.TYPE_RECEIVED),
+                                isTyping = true
                             )
-                            val randomReply = replies.random()
-                            messages.add(MsgBean(randomReply, MsgBean.TYPE_RECEIVED))
-                        }, (800..1500).random().toLong())
+                        )
+
+                        // 延迟后更新为实际回复内容
+                        val replies = listOf(
+                            "我收到了你的消息：$sentMessage\n让我想想怎么回复你...",
+                            "很有趣的想法！✨\n这个问题值得深入探讨。",
+                            "让我想想... 🤔\n根据我的理解，这确实是个好问题。",
+                            "你说得对！👍\n我完全同意你的观点。",
+                            "继续说，我听着呢 👂\n你的想法很有意思。",
+                            "这个话题很有意思！💡\n我们可以进一步讨论。",
+                            "原来如此！😊\n感谢你的分享。",
+                            "我完全同意你的看法\n这正是我想表达的。",
+                            "这确实是个好问题\n让我为你详细解答。",
+                            "感谢你的分享！\n期待听到更多你的想法。"
+                        )
+                        val randomReply = replies.random()
+
+                        // 模拟网络延迟后更新内容
+                        val delayMillis = (800..1500).random().toLong()
+                        coroutineScope.launch {
+                            delay(delayMillis)
+                            messages[typingIndex] = MessageState(
+                                MsgBean(randomReply, MsgBean.TYPE_RECEIVED),
+                                isTyping = true
+                            )
+                        }
                     }
                 },
                 onPlusClick = {
@@ -165,11 +207,12 @@ fun ChatScreen(
             ) {
                 items(
                     items = messages,
-                    key = { messages.indexOf(it).toString() + it.content }
-                ) { msg ->
-                    MessageBubble(
-                        message = msg.content,
-                        isSentByMe = msg.type == MsgBean.TYPE_SENT
+                    key = { it.id }
+                ) { messageState ->
+                    TypewriterMessageBubble(
+                        fullText = messageState.msgBean.content,
+                        isSentByMe = messageState.msgBean.type == MsgBean.TYPE_SENT,
+                        isTyping = messageState.isTyping
                     )
                 }
             }
@@ -247,7 +290,120 @@ fun ChatTopBar(
 }
 
 /**
- * 消息气泡
+ * 打字机效果的消息显示
+ * @param fullText 完整的文本内容
+ * @param isSentByMe 是否为我发送的消息
+ * @param isTyping 是否正在打字（仅对接收的消息有效）
+ */
+@Composable
+fun TypewriterMessageBubble(
+    fullText: String,
+    isSentByMe: Boolean,
+    isTyping: Boolean = false
+) {
+    var displayedText by remember(fullText) { mutableStateOf(if (isSentByMe) fullText else "") }
+    var isCurrentlyTyping by remember(fullText, isTyping) { mutableStateOf(isTyping) }
+
+    // 打字机效果动画
+    LaunchedEffect(fullText, isSentByMe, isCurrentlyTyping) {
+        if (!isSentByMe && isCurrentlyTyping && displayedText != fullText) {
+            displayedText = ""
+            val chars = fullText.toList()
+            chars.forEachIndexed { index, char ->
+                delay(30) // 每个字符的延迟时间
+                displayedText = fullText.take(index + 1)
+            }
+            isCurrentlyTyping = false
+        }
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = if (isSentByMe) Arrangement.End else Arrangement.Start
+    ) {
+        if (!isSentByMe) {
+            // 对方头像
+            Avatar(
+                name = "助",
+                backgroundColor = Color(0xFF6366F1),
+                modifier = Modifier.size(38.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+
+        Column(
+            modifier = Modifier.widthIn(max = 260.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = if (isSentByMe) Color(0xFF22C55E) else Color.White,
+                        shape = RoundedCornerShape(
+                            topStart = if (isSentByMe) 16.dp else 4.dp,
+                            topEnd = if (isSentByMe) 4.dp else 16.dp,
+                            bottomStart = 16.dp,
+                            bottomEnd = 16.dp
+                        )
+                    )
+                    .padding(
+                        start = 14.dp,
+                        end = 14.dp,
+                        top = 10.dp,
+                        bottom = 10.dp
+                    )
+            ) {
+                Row(
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Text(
+                        text = displayedText,
+                        color = if (isSentByMe) Color.White else Color(0xFF1A1A1A),
+                        fontSize = 15.sp,
+                        lineHeight = 22.sp
+                    )
+
+                    // 打字机光标效果
+                    if (!isSentByMe && isCurrentlyTyping) {
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Box(
+                            modifier = Modifier
+                                .width(2.dp)
+                                .height(18.dp)
+                                .background(
+                                    if (isSentByMe) Color.White else Color(0xFF1A1A1A)
+                                )
+                        )
+                    }
+                }
+            }
+
+            // 时间戳
+            Text(
+                text = getCurrentTime(),
+                fontSize = 11.sp,
+                color = Color(0xFF9CA3AF),
+                modifier = if (isSentByMe) {
+                    Modifier.padding(top = 4.dp)
+                } else {
+                    Modifier.padding(start = 6.dp, top = 4.dp)
+                }
+            )
+        }
+
+        if (isSentByMe) {
+            Spacer(modifier = Modifier.width(8.dp))
+            // 我的头像
+            Avatar(
+                name = "我",
+                backgroundColor = Color(0xFFF59E0B),
+                modifier = Modifier.size(38.dp)
+            )
+        }
+    }
+}
+
+/**
+ * 消息气泡（保留原有接口用于兼容）
  */
 @Composable
 fun MessageBubble(
@@ -358,7 +514,9 @@ fun ChatInputBar(
     onPlusClick: () -> Unit
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .imePadding(),
         shadowElevation = 4.dp,
         tonalElevation = 2.dp,
         color = Color.White
@@ -491,13 +649,14 @@ fun MessageBubblePreview() {
             .background(Color(0xFFF8FAFC))
             .padding(16.dp)
     ) {
-        MessageBubble(
-            message = "你好！很高兴认识你",
-            isSentByMe = false
+        TypewriterMessageBubble(
+            fullText = "你好！很高兴认识你",
+            isSentByMe = false,
+            isTyping = true
         )
         Spacer(modifier = Modifier.height(16.dp))
-        MessageBubble(
-            message = "我也很高兴认识你！这是用 Jetpack Compose 构建的聊天界面",
+        TypewriterMessageBubble(
+            fullText = "我也很高兴认识你！这是用 Jetpack Compose 构建的聊天界面",
             isSentByMe = true
         )
     }
