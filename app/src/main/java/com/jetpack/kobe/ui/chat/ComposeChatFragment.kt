@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,7 +20,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.animation.core.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,20 +30,24 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.fragment.findNavController
-import com.jetpack.kobe.bean.MsgBean
 import com.jetpack.kobe.ui.voice.DoubaoVoiceCallActivity
 import kotlinx.coroutines.delay
 
 /**
  * Jetpack Compose 版本的聊天 Fragment
- * 支持真实网络请求的 SSE 流式输出
+ * 重构版：模仿豆包的一问一答体验
+ *
+ * 核心设计：
+ * 1. 统一的消息列表，streaming 状态消息也在列表中
+ * 2. 只有最后一条接收消息可以是 streaming 状态
+ * 3. streaming 状态的消息实时显示内容 + 光标
+ * 4. 已完成的消息保持最终状态，滚动不复播动画
  */
 class ComposeChatFragment : Fragment() {
 
@@ -66,9 +70,6 @@ class ComposeChatFragment : Fragment() {
         }
     }
 
-    /**
-     * 启动语音通话
-     */
     private fun startVoiceCall() {
         val channelName = "voice_call_${System.currentTimeMillis()}"
         DoubaoVoiceCallActivity.start(requireContext(), channelName, "AI 助手")
@@ -87,23 +88,30 @@ fun ChatScreen(
 ) {
     var messageText by remember { mutableStateOf("") }
     val messages by viewModel.messages.collectAsState()
-    val streamingText by viewModel.streamingText.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val listState = rememberLazyListState()
     val focusRequester = remember { FocusRequester() }
 
-    // 计算总消息数（包括历史消息和正在流式输出的消息）
-    val totalMessageCount = messages.size + if (streamingText.isNotEmpty()) 1 else 0
-
     // 自动滚动到最新消息
-    LaunchedEffect(totalMessageCount, streamingText) {
-        if (totalMessageCount > 0) {
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) {
             try {
-                listState.animateScrollToItem(
-                    index = (totalMessageCount - 1).coerceAtLeast(0)
-                )
+                listState.animateScrollToItem(messages.size - 1)
             } catch (e: Exception) {
                 // 忽略滚动异常
+            }
+        }
+    }
+
+    // 跟随 streaming 内容滚动（监听最后一条消息的 content 变化）
+    val lastMessage = messages.lastOrNull()
+    LaunchedEffect(lastMessage?.content, lastMessage?.isStreaming) {
+        if (lastMessage != null && lastMessage.isStreaming && lastMessage.content.isNotEmpty()) {
+            try {
+                // 使用 scrollToItem 而不是 animateScrollToItem，避免频繁动画
+                listState.scrollToItem(messages.size - 1)
+            } catch (e: Exception) {
+                // 忽略
             }
         }
     }
@@ -131,9 +139,7 @@ fun ChatScreen(
                         viewModel.sendMessage(sentMessage)
                     }
                 },
-                onPlusClick = {
-                    // 扩展功能菜单
-                }
+                onPlusClick = { }
             )
         },
         containerColor = MaterialTheme.colorScheme.surface
@@ -151,32 +157,16 @@ fun ChatScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // 历史消息
                 items(
                     items = messages,
                     key = { it.id }
-                ) { messageState ->
-                    val playAnimation = messageState.isTyping && messageState.msgBean.type == MsgBean.TYPE_RECEIVED
-                    MessageBubbleContent(
-                        messageId = messageState.id,
-                        content = messageState.msgBean.content,
-                        isSentByMe = messageState.msgBean.type == MsgBean.TYPE_SENT,
-                        playAnimation = playAnimation,
-                        isStreaming = false
+                ) { message ->
+                    ChatMessageItem(
+                        content = message.content,
+                        isSentByMe = message.isSentByMe,
+                        isStreaming = message.isStreaming,
+                        timestamp = message.timestamp
                     )
-                }
-
-                // 正在流式输出的消息
-                if (streamingText.isNotEmpty()) {
-                    item(key = "streaming") {
-                        MessageBubbleContent(
-                            messageId = "streaming",
-                            content = streamingText,
-                            isSentByMe = false,
-                            playAnimation = false,
-                            isStreaming = true
-                        )
-                    }
                 }
             }
         }
@@ -184,23 +174,113 @@ fun ChatScreen(
 }
 
 /**
- * 流式消息气泡（入口函数）
+ * 单条消息组件
+ * 核心逻辑：
+ * - isSentByMe: 发送者（我/AI）
+ * - isStreaming: 是否正在流式输出（只有最后一条AI消息可能为true）
+ * - content: 当前内容（流式输出时实时更新）
  */
 @Composable
-private fun StreamingMessageBubble(
-    messageId: String,
+private fun ChatMessageItem(
     content: String,
     isSentByMe: Boolean,
-    playAnimation: Boolean = false,
-    isStreaming: Boolean = false
+    isStreaming: Boolean,
+    timestamp: String
 ) {
-    MessageBubbleContent(
-        messageId = messageId,
-        content = content,
-        isSentByMe = isSentByMe,
-        playAnimation = playAnimation,
-        isStreaming = isStreaming
-    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = if (isSentByMe) Arrangement.End else Arrangement.Start
+    ) {
+        if (!isSentByMe) {
+            Avatar(
+                name = "助",
+                backgroundColor = Color(0xFF6366F1),
+                modifier = Modifier.size(38.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+
+        Column(
+            modifier = Modifier.widthIn(max = 260.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = if (isSentByMe) Color(0xFF22C55E) else Color.White,
+                        shape = RoundedCornerShape(
+                            topStart = if (isSentByMe) 16.dp else 4.dp,
+                            topEnd = if (isSentByMe) 4.dp else 16.dp,
+                            bottomStart = 16.dp,
+                            bottomEnd = 16.dp
+                        )
+                    )
+                    .padding(
+                        start = 14.dp,
+                        end = 14.dp,
+                        top = 10.dp,
+                        bottom = 10.dp
+                    )
+            ) {
+                // 流式输出时显示闪烁光标
+                val showCursor = !isSentByMe && isStreaming
+
+                Row(
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Text(
+                        text = content,
+                        color = if (isSentByMe) Color.White else Color(0xFF1A1A1A),
+                        fontSize = 15.sp,
+                        lineHeight = 22.sp
+                    )
+
+                    // 光标效果
+                    if (showCursor) {
+                        Spacer(modifier = Modifier.width(2.dp))
+
+                        val infiniteTransition = rememberInfiniteTransition(label = "cursor")
+                        val alpha by infiniteTransition.animateFloat(
+                            initialValue = 1f,
+                            targetValue = 0f,
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(500),
+                                repeatMode = RepeatMode.Reverse
+                            ),
+                            label = "cursor_alpha"
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .width(2.dp)
+                                .height(18.dp)
+                                .background(Color.Black.copy(alpha = alpha))
+                        )
+                    }
+                }
+            }
+
+            // 时间戳
+            Text(
+                text = timestamp,
+                fontSize = 11.sp,
+                color = Color(0xFF9CA3AF),
+                modifier = if (isSentByMe) {
+                    Modifier.padding(top = 4.dp)
+                } else {
+                    Modifier.padding(start = 6.dp, top = 4.dp)
+                }
+            )
+        }
+
+        if (isSentByMe) {
+            Spacer(modifier = Modifier.width(8.dp))
+            Avatar(
+                name = "我",
+                backgroundColor = Color(0xFFF59E0B),
+                modifier = Modifier.size(38.dp)
+            )
+        }
+    }
 }
 
 /**
@@ -243,7 +323,6 @@ fun ChatTopBar(
             }
         },
         actions = {
-            // 清空历史按钮
             IconButton(onClick = onClearClick) {
                 Icon(
                     imageVector = Icons.Default.DeleteOutline,
@@ -251,7 +330,6 @@ fun ChatTopBar(
                     tint = Color(0xFF666666)
                 )
             }
-            // 语音通话按钮
             IconButton(onClick = onVoiceCallClick) {
                 Icon(
                     imageVector = Icons.Default.Phone,
@@ -279,327 +357,6 @@ fun ChatTopBar(
             titleContentColor = Color(0xFF1A1A1A)
         )
     )
-}
-
-/**
- * 消息气泡内容组件（真正的实现）
- */
-@Composable
-private fun MessageBubbleContent(
-    messageId: String,
-    content: String,
-    isSentByMe: Boolean,
-    playAnimation: Boolean,
-    isStreaming: Boolean
-) {
-    // 发送的消息直接显示完整内容，不需要动画状态
-    if (isSentByMe || isStreaming) {
-        SimpleMessageBubble(
-            content = content,
-            isSentByMe = isSentByMe,
-            isStreaming = isStreaming
-        )
-        return
-    }
-
-    // 接收消息：根据 playAnimation 决定是否显示动画
-    if (playAnimation) {
-        // 需要播放动画的消息，使用 AnimatingMessageBubble
-        AnimatingMessageBubble(
-            messageId = messageId,
-            content = content
-        )
-    } else {
-        // 不需要动画，直接显示完整内容
-        SimpleMessageBubble(
-            content = content,
-            isSentByMe = false,
-            isStreaming = false
-        )
-    }
-}
-
-/**
- * 带打字机动画的消息气泡
- */
-@Composable
-private fun AnimatingMessageBubble(
-    messageId: String,
-    content: String
-) {
-    // 状态只与 messageId 绑定，每个 messageId 只执行一次动画
-    var displayedText by remember(messageId) { mutableStateOf("") }
-    var isAnimating by remember(messageId) { mutableStateOf(true) }
-
-    // 只在首次创建时启动动画
-    LaunchedEffect(messageId) {
-        if (displayedText.isEmpty()) {
-            val chars = content.toList()
-            chars.forEachIndexed { index, _ ->
-                delay(20)
-                displayedText = content.take(index + 1)
-            }
-            isAnimating = false
-        }
-    }
-
-    val showCursor = isAnimating
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Start
-    ) {
-        // 对方头像
-        Avatar(
-            name = "助",
-            backgroundColor = Color(0xFF6366F1),
-            modifier = Modifier.size(38.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Column(
-            modifier = Modifier.widthIn(max = 260.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .background(
-                        color = Color.White,
-                        shape = RoundedCornerShape(
-                            topStart = 4.dp,
-                            topEnd = 16.dp,
-                            bottomStart = 16.dp,
-                            bottomEnd = 16.dp
-                        )
-                    )
-                    .padding(
-                        start = 14.dp,
-                        end = 14.dp,
-                        top = 10.dp,
-                        bottom = 10.dp
-                    )
-            ) {
-                Row(
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    Text(
-                        text = displayedText,
-                        color = Color(0xFF1A1A1A),
-                        fontSize = 15.sp,
-                        lineHeight = 22.sp
-                    )
-
-                    // 光标效果
-                    if (showCursor) {
-                        Spacer(modifier = Modifier.width(2.dp))
-
-                        // 闪烁光标动画
-                        val infiniteTransition = rememberInfiniteTransition(label = "cursor")
-                        val alpha by infiniteTransition.animateFloat(
-                            initialValue = 1f,
-                            targetValue = 0f,
-                            animationSpec = infiniteRepeatable(
-                                animation = tween(500),
-                                repeatMode = RepeatMode.Reverse
-                            ),
-                            label = "cursor_alpha"
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .width(2.dp)
-                                .height(18.dp)
-                                .background(Color.Black.copy(alpha = alpha))
-                        )
-                    }
-                }
-            }
-
-            // 时间戳
-            Text(
-                text = getCurrentTime(),
-                fontSize = 11.sp,
-                color = Color(0xFF9CA3AF),
-                modifier = Modifier.padding(start = 6.dp, top = 4.dp)
-            )
-        }
-    }
-}
-
-/**
- * 不带动画的简单消息气泡
- */
-@Composable
-private fun SimpleMessageBubble(
-    content: String,
-    isSentByMe: Boolean,
-    isStreaming: Boolean
-) {
-    val showCursor = isStreaming
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (isSentByMe) Arrangement.End else Arrangement.Start
-    ) {
-        if (!isSentByMe) {
-            Avatar(
-                name = "助",
-                backgroundColor = Color(0xFF6366F1),
-                modifier = Modifier.size(38.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-
-        Column(
-            modifier = Modifier.widthIn(max = 260.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .background(
-                        color = if (isSentByMe) Color(0xFF22C55E) else Color.White,
-                        shape = RoundedCornerShape(
-                            topStart = if (isSentByMe) 16.dp else 4.dp,
-                            topEnd = if (isSentByMe) 4.dp else 16.dp,
-                            bottomStart = 16.dp,
-                            bottomEnd = 16.dp
-                        )
-                    )
-                    .padding(
-                        start = 14.dp,
-                        end = 14.dp,
-                        top = 10.dp,
-                        bottom = 10.dp
-                    )
-            ) {
-                Row(
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    Text(
-                        text = content,
-                        color = if (isSentByMe) Color.White else Color(0xFF1A1A1A),
-                        fontSize = 15.sp,
-                        lineHeight = 22.sp
-                    )
-
-                    // 光标效果（仅流式输出时）
-                    if (showCursor && !isSentByMe) {
-                        Spacer(modifier = Modifier.width(2.dp))
-
-                        val infiniteTransition = rememberInfiniteTransition(label = "cursor")
-                        val alpha by infiniteTransition.animateFloat(
-                            initialValue = 1f,
-                            targetValue = 0f,
-                            animationSpec = infiniteRepeatable(
-                                animation = tween(500),
-                                repeatMode = RepeatMode.Reverse
-                            ),
-                            label = "cursor_alpha"
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .width(2.dp)
-                                .height(18.dp)
-                                .background(Color.Black.copy(alpha = alpha))
-                        )
-                    }
-                }
-            }
-
-            // 时间戳
-            Text(
-                text = getCurrentTime(),
-                fontSize = 11.sp,
-                color = Color(0xFF9CA3AF),
-                modifier = if (isSentByMe) {
-                    Modifier.padding(top = 4.dp)
-                } else {
-                    Modifier.padding(start = 6.dp, top = 4.dp)
-                }
-            )
-        }
-
-        if (isSentByMe) {
-            Spacer(modifier = Modifier.width(8.dp))
-            Avatar(
-                name = "我",
-                backgroundColor = Color(0xFFF59E0B),
-                modifier = Modifier.size(38.dp)
-            )
-        }
-    }
-}
-
-/**
- * 消息气泡（保留原有接口用于兼容）
- */
-@Composable
-fun MessageBubble(
-    message: String,
-    isSentByMe: Boolean
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (isSentByMe) Arrangement.End else Arrangement.Start
-    ) {
-        if (!isSentByMe) {
-            Avatar(
-                name = "助",
-                backgroundColor = Color(0xFF6366F1),
-                modifier = Modifier.size(38.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-
-        Column(
-            modifier = Modifier.widthIn(max = 260.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .background(
-                        color = if (isSentByMe) Color(0xFF22C55E) else Color.White,
-                        shape = RoundedCornerShape(
-                            topStart = if (isSentByMe) 16.dp else 4.dp,
-                            topEnd = if (isSentByMe) 4.dp else 16.dp,
-                            bottomStart = 16.dp,
-                            bottomEnd = 16.dp
-                        )
-                    )
-                    .padding(
-                        start = 14.dp,
-                        end = 14.dp,
-                        top = 10.dp,
-                        bottom = 10.dp
-                    )
-            ) {
-                Text(
-                    text = message,
-                    color = if (isSentByMe) Color.White else Color(0xFF1A1A1A),
-                    fontSize = 15.sp,
-                    lineHeight = 22.sp
-                )
-            }
-
-            Text(
-                text = getCurrentTime(),
-                fontSize = 11.sp,
-                color = Color(0xFF9CA3AF),
-                modifier = if (isSentByMe) {
-                    Modifier.padding(top = 4.dp)
-                } else {
-                    Modifier.padding(start = 6.dp, top = 4.dp)
-                }
-            )
-        }
-
-        if (isSentByMe) {
-            Spacer(modifier = Modifier.width(8.dp))
-            Avatar(
-                name = "我",
-                backgroundColor = Color(0xFFF59E0B),
-                modifier = Modifier.size(38.dp)
-            )
-        }
-    }
 }
 
 /**
@@ -639,11 +396,9 @@ fun ChatInputBar(
     onSendClick: () -> Unit,
     onPlusClick: () -> Unit
 ) {
-    // 发送后自动重新获取焦点，保持键盘打开
     LaunchedEffect(messageText) {
         if (messageText.isEmpty()) {
-            // 延迟请求焦点，确保输入框完成重组
-            kotlinx.coroutines.delay(50)
+            delay(50)
             focusRequester.requestFocus()
         }
     }
@@ -662,7 +417,6 @@ fun ChatInputBar(
                 .padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 语音按钮
             IconButton(
                 onClick = { },
                 modifier = Modifier.size(36.dp)
@@ -675,7 +429,6 @@ fun ChatInputBar(
                 )
             }
 
-            // 输入框
             OutlinedTextField(
                 value = messageText,
                 onValueChange = onMessageChange,
@@ -698,14 +451,12 @@ fun ChatInputBar(
                 ),
                 shape = RoundedCornerShape(20.dp),
                 maxLines = 4,
-                // 移除 enabled = !isLoading，避免失去焦点导致键盘隐藏
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                 keyboardActions = KeyboardActions(
                     onSend = { onSendClick() }
                 )
             )
 
-            // 表情按钮
             IconButton(
                 onClick = { },
                 modifier = Modifier.size(36.dp)
@@ -718,7 +469,6 @@ fun ChatInputBar(
                 )
             }
 
-            // 加号按钮
             IconButton(
                 onClick = onPlusClick,
                 modifier = Modifier.size(36.dp)
@@ -731,21 +481,18 @@ fun ChatInputBar(
                 )
             }
 
-            // 发送按钮 / 停止按钮
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
                     .background(
                         when {
-                            isLoading -> Color(0xFFEF4444) // 红色停止按钮
+                            isLoading -> Color(0xFFEF4444)
                             messageText.isNotBlank() -> Color(0xFF22C55E)
                             else -> Color(0xFFE5E7EB)
                         }
                     )
-                    .clickable(
-                        onClick = onSendClick
-                    ),
+                    .clickable(onClick = onSendClick),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -768,74 +515,4 @@ fun getCurrentTime(): String {
     val now = java.util.Date()
     val formatter = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
     return formatter.format(now)
-}
-
-// ============ 预览 ============
-
-@Preview(showBackground = true, heightDp = 800)
-@Composable
-fun ChatScreenPreview() {
-    MaterialTheme {
-        val viewModel = ChatViewModel()
-        ChatScreen(viewModel = viewModel, onBackClick = {}, onVoiceCallClick = {})
-    }
-}
-
-@Preview(showBackground = true, widthDp = 400)
-@Composable
-fun MessageBubblePreview() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFFF8FAFC))
-            .padding(16.dp)
-    ) {
-        StreamingMessageBubble(
-            messageId = "msg1",
-            content = "你好！很高兴认识你",
-            isSentByMe = false,
-            playAnimation = true,
-            isStreaming = false
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        StreamingMessageBubble(
-            messageId = "msg2",
-            content = "我也很高兴认识你！这是用 Jetpack Compose 构建的聊天界面",
-            isSentByMe = true
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        StreamingMessageBubble(
-            messageId = "msg3",
-            content = "这是正在流式输出的消息，你会看到文字逐字逐句地出现",
-            isSentByMe = false,
-            isStreaming = true
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 400, heightDp = 80)
-@Composable
-fun ChatInputBarPreview() {
-    MaterialTheme {
-        val focusRequester = remember { FocusRequester() }
-        ChatInputBar(
-            messageText = "输入消息",
-            isLoading = false,
-            focusRequester = focusRequester,
-            onMessageChange = {},
-            onSendClick = {},
-            onPlusClick = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 400, heightDp = 60)
-@Composable
-fun ChatTopBarPreview() {
-    ChatTopBar(
-        onBackClick = {},
-        onVoiceCallClick = {},
-        userName = "智能助手",
-        userStatus = "在线"
-    )
 }

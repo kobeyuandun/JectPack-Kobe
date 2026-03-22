@@ -10,6 +10,19 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
+
+    <!-- 微信语音通话所需权限 -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <application
         android:name=".App"
         android:allowBackup="true"
@@ -54,5 +67,40 @@
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
             android:theme="@style/DoubaoVoiceCallTheme" />
+
+        <!-- 来电界面 - 全屏显示 -->
+        <activity
+            android:name=".ui.voice.IncomingCallActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|keyboardHidden|fontScale|screenLayout|smallestScreenSize|locale|uiMode|layoutDirection|density"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:theme="@style/IncomingCallTheme"
+            android:showOnLockScreen="true"
+            android:turnScreenOn="true">
+            <!-- 全屏通知意图过滤器 -->
+            <intent-filter>
+                <action android:name="android.intent.action.ANSWER" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- 语音通话前台服务 -->
+        <service
+            android:name=".ui.voice.VoiceCallService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"
+            android:stopWithTask="true" />
+
+        <!-- 来电广播接收器 -->
+        <receiver
+            android:name=".ui.voice.IncomingCallReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.jetpack.kobe.ACTION_ACCEPT_CALL" />
+                <action android:name="com.jetpack.kobe.ACTION_REJECT_CALL" />
+                <action android:name="com.jetpack.kobe.ACTION_END_CALL" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

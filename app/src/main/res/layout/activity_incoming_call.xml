@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#CC000000">
+
+    <!-- 来电动效波纹层 -->
+    <FrameLayout
+        android:id="@+id/ripple_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/guideline"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- 第一层波纹 -->
+        <View
+            android:id="@+id/ripple_layer1"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:layout_gravity="center"
+            android:background="@drawable/incoming_call_ripple_1"
+            android:alpha="0.6" />
+
+        <!-- 第二层波纹 -->
+        <View
+            android:id="@+id/ripple_layer2"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:layout_gravity="center"
+            android:background="@drawable/incoming_call_ripple_1"
+            android:alpha="0.6" />
+
+        <!-- 第三层波纹 -->
+        <View
+            android:id="@+id/ripple_layer3"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:layout_gravity="center"
+            android:background="@drawable/incoming_call_ripple_1"
+            android:alpha="0.6" />
+
+    </FrameLayout>
+
+    <!-- 头像容器 -->
+    <FrameLayout
+        android:id="@+id/avatar_container"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        app:layout_constraintBottom_toTopOf="@id/tv_caller_name"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_chainStyle="packed">
+
+        <!-- 头像背景渐变 -->
+        <View
+            android:id="@+id/avatar_bg"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_gravity="center"
+            android:background="@drawable/incoming_call_avatar_bg" />
+
+        <!-- 头像图片 -->
+        <ImageView
+            android:id="@+id/iv_avatar"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_voice_call_avatar"
+            android:scaleType="centerCrop" />
+
+        <!-- 在线状态点 -->
+        <View
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/online_status_dot" />
+
+    </FrameLayout>
+
+    <!-- 来电者姓名 -->
+    <TextView
+        android:id="@+id/tv_caller_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:text="AI 助手"
+        android:textColor="#FFFFFF"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@id/tv_call_status"
+        app:layout_constraintTop_toBottomOf="@id/avatar_container"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <!-- 通话状态 -->
+    <TextView
+        android:id="@+id/tv_call_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="语音通话"
+        android:textColor="#CCFFFFFF"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@id/guideline"
+        app:layout_constraintTop_toBottomOf="@id/tv_caller_name"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <!-- 指导线：分隔上方信息和下方按钮 -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.55" />
+
+    <!-- 滑动拒绝容器 -->
+    <FrameLayout
+        android:id="@+id/slide_reject_container"
+        android:layout_width="0dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginEnd="30dp"
+        android:layout_marginBottom="80dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- 拒绝按钮（左） -->
+        <FrameLayout
+            android:id="@+id/btn_reject"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="start|center_vertical">
+
+            <View
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:background="@drawable/incoming_call_reject_bg" />
+
+            <ImageView
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_call_end"
+                app:tint="#FFFFFF" />
+
+        </FrameLayout>
+
+        <!-- 接听按钮（右） -->
+        <FrameLayout
+            android:id="@+id/btn_accept"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="end|center_vertical">
+
+            <View
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:background="@drawable/incoming_call_accept_bg" />
+
+            <ImageView
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_call"
+                app:tint="#FFFFFF" />
+
+        </FrameLayout>
+
+        <!-- 滑动提示 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="向右滑动接听"
+            android:textColor="#CCFFFFFF"
+            android:textSize="14sp" />
+
+        <!-- 滑动指示器 -->
+        <View
+            android:id="@+id/slide_indicator"
+            android:layout_width="4dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="60dp"
+            android:background="@drawable/slide_indicator_bg" />
+
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

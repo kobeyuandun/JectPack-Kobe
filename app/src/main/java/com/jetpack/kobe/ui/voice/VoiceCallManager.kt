@@ -21,6 +21,7 @@ class VoiceCallManager private constructor() {
     private var rtcEngine: RtcEngine? = null
     private var config: RtcEngineConfig? = null
     private var isMuted = false // 本地跟踪静音状态
+    private var currentCallChannel: String? = null // 当前通话频道
 
     companion object {
         private var instance: VoiceCallManager? = null
@@ -212,4 +213,71 @@ class VoiceCallManager private constructor() {
     fun isInitialized(): Boolean {
         return rtcEngine != null
     }
+
+    /**
+     * 接收来电
+     * 显示全屏来电界面和通知
+     */
+    fun receiveIncomingCall(context: Context, channelName: String, userName: String, uid: Int) {
+        currentCallChannel = channelName
+
+        // 显示来电通知（会同时触发全屏 Activity）
+        VoiceCallNotificationManager.showIncomingCallNotification(
+            context,
+            channelName,
+            userName,
+            uid
+        )
+    }
+
+    /**
+     * 拒绝来电
+     */
+    fun rejectCall(channelName: String) {
+        currentCallChannel = null
+        // 可以在这里添加向服务器发送拒绝信号的逻辑
+    }
+
+    /**
+     * 接听来电
+     * 加入频道并启动前台服务
+     */
+    fun acceptCall(context: Context, channelName: String, userName: String, uid: Int): Int {
+        currentCallChannel = channelName
+
+        // 取消来电通知
+        VoiceCallNotificationManager.cancelIncomingCallNotification(context)
+
+        // 启动前台服务
+        VoiceCallService.start(context, channelName, userName)
+
+        // 加入频道
+        return joinChannel(channelName, uid)
+    }
+
+    /**
+     * 结束通话
+     */
+    fun endCall(context: Context) {
+        currentCallChannel = null
+
+        // 离开频道
+        leaveChannel()
+
+        // 停止前台服务
+        VoiceCallService.stop(context)
+
+        // 取消通知
+        VoiceCallNotificationManager.cancelOngoingCallNotification(context)
+    }
+
+    /**
+     * 获取当前通话频道
+     */
+    fun getCurrentCallChannel(): String? = currentCallChannel
+
+    /**
+     * 是否正在通话
+     */
+    fun isInCall(): Boolean = currentCallChannel != null
 }

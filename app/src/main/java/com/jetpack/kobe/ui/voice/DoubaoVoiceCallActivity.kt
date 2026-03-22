@@ -435,7 +435,8 @@ class DoubaoVoiceCallActivity : AppCompatActivity() {
 
         animationHandler.removeCallbacksAndMessages(null)
 
-        rippleAnimators.forEach { it.cancel() }
+        // 遍历副本，避免 ConcurrentModificationException
+        rippleAnimators.toList().forEach { it.cancel() }
         rippleAnimators.clear()
 
         // 重置所有视图状态

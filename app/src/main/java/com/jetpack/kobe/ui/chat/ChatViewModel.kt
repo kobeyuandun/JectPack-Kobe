@@ -2,29 +2,47 @@ package com.jetpack.kobe.ui.chat
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jetpack.kobe.bean.MsgBean
 import com.jetpack.kobe.ui.chat.model.ChatMessage
 import com.jetpack.kobe.ui.chat.network.MockStreamingChatApi
 import com.jetpack.kobe.ui.chat.network.StreamingChatApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.UUID
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
- * 聊天界面 ViewModel
- * 处理消息发送、流式响应接收
+ * 聊天界面 ViewModel - 重构版
+ *
+ * 核心设计原则：
+ * 1. 统一的消息列表，包括正在流式输出的消息
+ * 2. 只有最后一条 AI 回复消息可以是 streaming 状态
+ * 3. streaming 状态的消息内容实时更新
+ * 4. 新消息到来时，自动将之前的 streaming 消息标记为完成
  */
 class ChatViewModel(
     private val chatApi: StreamingChatApi = MockStreamingChatApi()
 ) : ViewModel() {
 
-    // 消息列表
-    private val _messages = MutableStateFlow<List<MessageState>>(emptyList())
-    val messages: StateFlow<List<MessageState>> = _messages.asStateFlow()
+    /**
+     * 消息数据类
+     * @param content 消息内容
+     * @param isSentByMe 是否为发送者（我）发送的消息
+     * @param isStreaming 是否正在流式输出（只有最后一条AI消息可能为true）
+     * @param timestamp 时间戳
+     * @param id 唯一标识
+     */
+    data class ChatMessageItem(
+        val content: String,
+        val isSentByMe: Boolean,
+        val isStreaming: Boolean = false,
+        val timestamp: String = getCurrentTime(),
+        val id: String = UUID.randomUUID().toString()
+    )
 
-    // 正在流式输出的文本
-    private val _streamingText = MutableStateFlow("")
-    val streamingText: StateFlow<String> = _streamingText.asStateFlow()
+    // 消息列表（包括正在流式输出的消息）
+    private val _messages = MutableStateFlow<List<ChatMessageItem>>(emptyList())
+    val messages: StateFlow<List<ChatMessageItem>> = _messages.asStateFlow()
 
     // 是否正在发送/接收
     private val _isLoading = MutableStateFlow(false)
@@ -35,11 +53,14 @@ class ChatViewModel(
 
     init {
         // 初始化欢迎消息
-        addMessage(
-            content = "你好！很高兴认识你 👋\n这是使用 Jetpack Compose 构建的聊天界面",
-            isSent = false,
-            isTyping = true
+        _messages.value = listOf(
+            ChatMessageItem(
+                content = "你好！很高兴认识你 👋\n这是使用 Jetpack Compose 构建的聊天界面",
+                isSentByMe = false,
+                isStreaming = false
+            )
         )
+        conversationHistory.add(ChatMessage.assistant(_messages.value.first().content))
     }
 
     /**
@@ -49,13 +70,23 @@ class ChatViewModel(
         if (content.isBlank() || _isLoading.value) return
 
         viewModelScope.launch {
-            // 1. 添加用户消息
-            addMessage(content, isSent = true, isTyping = false)
+            // 1. 先将之前的 streaming 消息标记为完成
+            completeStreamingMessage()
+
+            // 2. 添加用户消息
+            addUserMessage(content)
             conversationHistory.add(ChatMessage.user(content))
 
-            // 2. 开始流式接收
+            // 3. 创建一条空的 AI 消息，标记为 streaming
+            val streamingMessage = ChatMessageItem(
+                content = "",
+                isSentByMe = false,
+                isStreaming = true
+            )
+            _messages.update { it + streamingMessage }
+
+            // 4. 开始流式接收
             _isLoading.value = true
-            _streamingText.value = ""
 
             try {
                 chatApi.streamChat(
@@ -67,77 +98,72 @@ class ChatViewModel(
                 ).collect { chunk ->
                     when (chunk) {
                         "\u0000" -> {
-                            // 流式结束，添加完整消息到列表
-                            finishStreaming()
+                            // 流式结束
+                            completeStreamingMessage()
+                            _isLoading.value = false
                         }
                         else -> {
-                            // 追加文本
-                            _streamingText.value += chunk
+                            // 实时更新 streaming 消息的内容
+                            _messages.update { messages ->
+                                messages.map { msg ->
+                                    if (msg.isStreaming) {
+                                        msg.copy(content = msg.content + chunk)
+                                    } else {
+                                        msg
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             } catch (e: Exception) {
                 // 错误处理
-                _streamingText.value = "请求失败: ${e.message}"
-                kotlinx.coroutines.delay(2000)
-                finishStreaming()
+                _messages.update { messages ->
+                    messages.map { msg ->
+                        if (msg.isStreaming) {
+                            msg.copy(content = "请求失败: ${e.message}", isStreaming = false)
+                        } else {
+                            msg
+                        }
+                    }
+                }
+                delay(2000)
+                _isLoading.value = false
             }
         }
     }
 
     /**
-     * 完成流式输出，将内容添加到消息列表
+     * 将当前 streaming 消息标记为完成
      */
-    private fun finishStreaming() {
-        val fullText = _streamingText.value
-        if (fullText.isNotEmpty()) {
-            // 只将最后一条接收消息的 isTyping 设为 false，不影响其他消息
-            _messages.update { messages ->
-                val updated = messages.mapIndexed { index, msg ->
-                    // 只将最后一条接收消息的动画关闭
-                    if (index == messages.lastIndex &&
-                        msg.msgBean.type == MsgBean.TYPE_RECEIVED) {
-                        msg.copy(isTyping = false)
-                    } else {
-                        msg
+    private fun completeStreamingMessage() {
+        _messages.update { messages ->
+            val updated = messages.map { msg ->
+                if (msg.isStreaming) {
+                    msg.copy(isStreaming = false).also {
+                        // 将完成的消息添加到对话历史
+                        if (it.content.isNotEmpty()) {
+                            conversationHistory.add(ChatMessage.assistant(it.content))
+                        }
                     }
+                } else {
+                    msg
                 }
-                updated + MessageState(
-                    msgBean = MsgBean(fullText, MsgBean.TYPE_RECEIVED),
-                    isTyping = true,  // 只有新消息播放动画
-                    id = UUID.randomUUID().toString()
-                )
             }
-            conversationHistory.add(ChatMessage.assistant(fullText))
+            updated
         }
-        _streamingText.value = ""
-        _isLoading.value = false
     }
 
     /**
-     * 添加消息到列表
+     * 添加用户消息
      */
-    private fun addMessage(content: String, isSent: Boolean, isTyping: Boolean) {
-        _messages.update { currentMessages ->
-            // 如果是接收消息且需要播放动画，只关闭最后一条接收消息的动画
-            val updated = if (!isSent && isTyping && currentMessages.isNotEmpty()) {
-                currentMessages.mapIndexed { index, msg ->
-                    if (index == currentMessages.lastIndex &&
-                        msg.msgBean.type == MsgBean.TYPE_RECEIVED) {
-                        msg.copy(isTyping = false)
-                    } else {
-                        msg
-                    }
-                }
-            } else {
-                currentMessages
-            }
-            updated + MessageState(
-                msgBean = MsgBean(content, if (isSent) MsgBean.TYPE_SENT else MsgBean.TYPE_RECEIVED),
-                isTyping = isTyping,
-                id = UUID.randomUUID().toString()
-            )
-        }
+    private fun addUserMessage(content: String) {
+        val userMessage = ChatMessageItem(
+            content = content,
+            isSentByMe = true,
+            isStreaming = false
+        )
+        _messages.update { it + userMessage }
     }
 
     /**
@@ -145,66 +171,22 @@ class ChatViewModel(
      */
     fun clearHistory() {
         conversationHistory.clear()
-        _messages.value = emptyList()
-        _streamingText.value = ""
-        // 重新添加欢迎消息
-        addMessage(
-            content = "你好！很高兴认识你 👋\n对话已重置",
-            isSent = false,
-            isTyping = true
+        _isLoading.value = false
+        _messages.value = listOf(
+            ChatMessageItem(
+                content = "你好！很高兴认识你 👋\n对话已重置",
+                isSentByMe = false,
+                isStreaming = false
+            )
         )
+        conversationHistory.add(ChatMessage.assistant(_messages.value.first().content))
     }
 
     /**
-     * 重试当前消息
+     * 获取当前时间
      */
-    fun retry() {
-        // 移除最后一条助手消息，重新请求
-        val lastMessage = conversationHistory.lastOrNull()
-        if (lastMessage?.role == ChatMessage.ROLE_ASSISTANT) {
-            conversationHistory.removeLast()
-            _messages.update { it.dropLast(1) }
-        }
-
-        // 重新发送用户消息（不添加到列表，直接重用）
-        val _lastUserMessage = conversationHistory.lastOrNull {
-            it.role == ChatMessage.ROLE_USER
-        } ?: return
-
-        viewModelScope.launch {
-            _isLoading.value = true
-            _streamingText.value = ""
-
-            try {
-                chatApi.streamChat(
-                    com.jetpack.kobe.ui.chat.model.ChatRequest(
-                        model = "gpt-3.5-turbo",
-                        messages = conversationHistory.toList(),
-                        stream = true
-                    )
-                ).collect { chunk ->
-                    when (chunk) {
-                        "\u0000" -> finishStreaming()
-                        else -> _streamingText.value += chunk
-                    }
-                }
-            } catch (e: Exception) {
-                _streamingText.value = "请求失败: ${e.message}"
-                kotlinx.coroutines.delay(2000)
-                finishStreaming()
-            }
-        }
+    private fun getCurrentTime(): String {
+        val formatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+        return formatter.format(Date())
     }
 }
-
-/**
- * 消息状态数据类
- * @param msgBean 原始消息数据
- * @param isTyping 是否正在打字（用于接收消息的打字机效果）
- * @param id 唯一标识符
- */
-data class MessageState(
-    val msgBean: MsgBean,
-    val isTyping: Boolean = false,
-    val id: String = UUID.randomUUID().toString()
-)

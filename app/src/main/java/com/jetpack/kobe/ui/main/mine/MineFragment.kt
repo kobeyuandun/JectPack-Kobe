@@ -6,8 +6,10 @@ import android.view.View
 import android.view.ViewGroup
 import com.jetpack.jplib.base.LazyFragment
 import com.jetpack.jplib.common.clickNoRepeat
+import com.jetpack.jplib.common.toast
 import com.jetpack.kobe.R
 import com.jetpack.kobe.databinding.FragmentMineBinding
+import com.jetpack.kobe.ui.voice.VoiceCallManager
 import org.greenrobot.eventbus.EventBus
 
 /**
@@ -76,6 +78,16 @@ class MineFragment : LazyFragment<FragmentMineBinding>() {
         binding.clArticle.clickNoRepeat {
             // 跳转到新的抖音风格视频流页面
             nav().navigate(R.id.action_main_fragment_to_my_article_fragment)
+        }
+        binding.clVoiceCall.clickNoRepeat {
+            // 测试语音通话 - 模拟来电
+            toast("触发语音通话测试...")
+            VoiceCallManager.getInstance().receiveIncomingCall(
+                requireContext(),
+                channelName = "test_channel_${System.currentTimeMillis()}",
+                userName = "AI 助手",
+                uid = 12345
+            )
         }
 //        binding.clWebsite.clickNoRepeat {
 //            nav().navigate(R.id.action_main_fragment_to_web_fragment, Bundle().apply {
